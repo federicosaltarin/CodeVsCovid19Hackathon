@@ -1,0 +1,133 @@
+---
+title: "Covid 19 Syntetic Data - Corona Science, CodeVsCovid Hackathon"
+output: html_notebook
+author: "Federico Saltarin"
+---
+
+```{r}
+library(dplyr)
+library(tidyr)
+library(stringr)
+library(tcltk)
+```
+
+
+```{r}
+days = 20
+users = 1000
+rows = days * users
+
+#canton_list = c("ZH","BE","LU","UR","SZ","OW","NW","GL","ZG","FR","SO",
+#               "SH","AI","SG","GR","AG","TG","TI","VD","VS","NE","GE","JU")
+
+symptoms = c("coughing", "sneezing", "throat_pain", "fatigue", "breathing_impaired", "headache", "diarrhea", "nausea", "loss_of_smell")
+social_data = c("thinks_sick", "close_infected", "usually_home", "contacted_hospital", "tested", "positive_to_test", "risk", "works_in_health", "smoker")
+
+n=seq(1:users)
+
+day_gen = rep(seq(as.Date("2019-04-01"), length.out = days, by = "1 day"),length(n))
+
+user="user"
+user_paste = paste0(user,n)
+username = rep(user_paste,each=length(unique(day_gen)))
+
+age_range = seq(10:100)
+
+genders = c("M","F")
+
+user_nationality = "Swiss"
+
+user_country = "Switzerland"
+
+canton_list = c("ZH","BE","LU","TI")
+
+symptom_bool = c(TRUE, FALSE)
+
+family_members = c(1:5)
+
+symp_severity = c(0,1,2,3)
+
+temp = c(36:40)
+
+r_v_list=c()
+
+output_file = "/home/federico/Desktop/Covid_Data_1000_Users.csv"
+```
+
+
+```{r}
+df2 <- data.frame(matrix(ncol = length(colnames(df)), nrow = rows))
+colnames(df2) <- colnames(df)
+```
+
+
+```{r}
+df2 = df2 %>% mutate(day = day_gen,
+                     user = username) %>% 
+              group_by(user) %>% 
+              mutate(age = sample(age_range, 1, replace=TRUE),
+                     gender = sample(genders, 1, replace=TRUE))
+```
+
+
+```{r}
+df2 = df2 %>% ungroup() %>% 
+              mutate(country= user_country,
+                     nationality = user_nationality)
+```
+
+
+```{r}
+df2 = df2 %>% group_by(user) %>% 
+              mutate(canton = sample(canton_list, 1, replace=TRUE),
+                     family = sample(family_members, 1, replace=TRUE)) 
+
+```
+
+
+```{r}
+for(i in 1:length(social_data)){
+  r=sample(c(TRUE,FALSE), length(unique(df2$user)), replace=TRUE)
+  rand_vector = rep(r, each = days)
+  df2[,social_data[i]] = rand_vector
+}
+```
+
+
+```{r}
+df2 = df2 %>% group_by(user) %>% 
+  mutate(temp_rand = sample(temp, 1, replace=TRUE),
+         temperature = round(rnorm(days,temp_rand, 2),digits=1),
+         temperature = ifelse (temperature < 36, 36, temperature)) 
+```
+
+```{r}
+df2 = df2 %>% ungroup() 
+for(i in 1:length(symptoms)){
+  rand_vector=c()
+  for (j in 1:length(df2$user)){
+    r=sample(c(0:3), 1, replace=TRUE)
+    rand_vector=c(rand_vector,r)
+  }
+  df2[,symptoms[i]] = rand_vector
+  }
+```
+
+```{r}
+df2 = df2 %>%
+  select(-c(temp_rand))
+```
+
+
+```{r}
+write.csv(df2, output_file)
+```
+
+
+
+
+
+
+
+
+
