@@ -98,7 +98,8 @@ for(i in 1:length(social_data)){
 df2 = df2 %>% group_by(user) %>% 
   mutate(temp_rand = sample(temp, 1, replace=TRUE),
          temperature = round(rnorm(days,temp_rand, 2),digits=1),
-         temperature = ifelse (temperature < 36, 36, temperature)) 
+         temperature = ifelse (temperature < 36, 36, temperature),
+         temperature = ifelse (temperature > 40, 40, temperature)) 
 ```
 
 ```{r}
